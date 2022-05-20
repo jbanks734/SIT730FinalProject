@@ -15,14 +15,14 @@ int lightState = LOW;
 // light
 void lightfunction()
 {
-  while (lightcount != 0 && lightcount < 8)
+  while (lightcount != 0 && lightcount != 7)
   {
     analogValue = analogRead(photoresistor);
     if (analogValue > 6)
     {
       Serial.println("IsLight");
       Serial.println(lightcount);
-      lightcount = 15;
+      lightcount++;
     }
     else
     {
@@ -40,7 +40,7 @@ void getlightfunction()
 
   Serial.println("BreakOut");
 
-  if (lightcount == 15)
+  if (lightcount == 7)
   {
     if (lightState == LOW)
     {
@@ -84,13 +84,17 @@ void pirfunction()
       Serial.println("IsMovement");
       Serial.println(pircount);
       Serial.println(piron);
+      Serial.println(pirState);
+
       pircount = 25;
       piron = HIGH;
     }
     else
     {
       Serial.println("NoMovement");
-      Serial.println(piroff);
+      Serial.println(pircount);
+      Serial.println(piron);
+      Serial.println(pirState);
       pircount--;
       piroff = HIGH;
     }
@@ -143,5 +147,23 @@ void setup()
 void loop()
 {
   getpirfunction();
-  getlightfunction();
+
+  if (pirState == HIGH)
+  {
+    getlightfunction();
+
+    if (lightState == HIGH && pirState == HIGH)
+    {
+      // Turn lights on
+    }
+    else
+    {
+      // Turn lights off
+    }
+  }
+  else
+  {
+    Serial.println("no pir");
+    // Turn lights off
+  }
 }
