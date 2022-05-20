@@ -1,5 +1,6 @@
 // overall
 int IFTTTState = LOW;
+int movement = LOW;
 
 int ledPin = 7;     // Argon's onboard LED
 int inputPin = 2;   // Sensor input
@@ -136,18 +137,7 @@ void getpirfunction()
   delay(4s);
 }
 
-void setup()
-{
-  pinMode(ledPin, OUTPUT);  // declare LED as output
-  pinMode(inputPin, INPUT); // declare sensor as input
-
-  // light
-  pinMode(photoresistor, INPUT);
-
-  Serial.begin(9600);
-}
-
-void loop()
+void togglelights()
 {
   getpirfunction();
 
@@ -155,17 +145,17 @@ void loop()
   {
     getlightfunction();
 
-    if (lightState == HIGH && pirState == HIGH && IFTTTState == LOW)
+    if (lightState == LOW && pirState == HIGH && IFTTTState == LOW)
     {
       Serial.println("Turn ON");
       // Turn lights on
       Particle.publish("on", "on");
       IFTTTState = HIGH;
     }
-    else if (lightState == HIGH && pirState == HIGH && IFTTTState == HIGH)
+    else if (lightState == HIGH || lightState == LOW && pirState == HIGH && IFTTTState == HIGH)
     {
       //  Lights already on
-      Serial.println("Already ON");
+      Serial.println("do nothing");
       IFTTTState = HIGH;
     }
     else
@@ -193,4 +183,20 @@ void loop()
       IFTTTState = LOW;
     }
   }
+}
+
+void setup()
+{
+  pinMode(ledPin, OUTPUT);  // declare LED as output
+  pinMode(inputPin, INPUT); // declare sensor as input
+
+  // light
+  pinMode(photoresistor, INPUT);
+
+  Serial.begin(9600);
+}
+
+void loop()
+{
+  togglelights();
 }
