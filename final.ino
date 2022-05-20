@@ -1,3 +1,14 @@
+
+#include <MQTT.h>
+
+MQTT client("test.mosquitto.org", 1883, callback);
+
+// This is called when a message is received. However, we do not use this feature in
+// this project so it will be left empty
+void callback(char *topic, byte *payload, unsigned int length)
+{
+}
+
 // overall
 int IFTTTState = LOW;
 
@@ -184,6 +195,29 @@ void togglelights()
   }
 }
 
+void MQTTfunction()
+{
+  // Only try to send messages if we are connected
+  if (client.isConnected())
+  {
+
+    client.publish("photonLog", "Button has been pressed");
+
+    // If the button is pressed it will be read as 0V since the button is
+    // in an inverting configuation.
+
+    // if (digitalRead(0) == 0)
+    // {
+    //   // Publish our message to the test server
+    //   client.publish("photonLog", "Button has been pressed");
+    //   delay(1000);
+    // }
+
+    // CALL THIS at the end of your loop
+    client.loop();
+  }
+}
+
 void setup()
 {
   pinMode(ledPin, OUTPUT);  // declare LED as output
@@ -193,9 +227,13 @@ void setup()
   pinMode(photoresistor, INPUT);
 
   Serial.begin(9600);
+
+  // Connect to the server and call ourselves "photonDev"
+  client.connect("photonDev");
 }
 
 void loop()
 {
-  togglelights();
+  // togglelights();
+  MQTTfunction();
 }
