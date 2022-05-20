@@ -1,6 +1,5 @@
 // overall
 int IFTTTState = LOW;
-int movement = LOW;
 
 int ledPin = 7;     // Argon's onboard LED
 int inputPin = 2;   // Sensor input
