@@ -42,7 +42,7 @@ void getlightfunction()
 
   if (lightcount == 15)
   {
-    if (lightState == HIGH)
+    if (lightState == LOW)
     {
       Serial.println("Notify light on");
       // Particle.publish("on", "on");
@@ -55,7 +55,7 @@ void getlightfunction()
   }
   else
   {
-    if (lightState == LOW)
+    if (lightState == HIGH)
     {
       Serial.println("Notify light off");
       // Particle.publish("off", "off");
