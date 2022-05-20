@@ -1,3 +1,6 @@
+// overall
+int IFTTTState = LOW;
+
 int ledPin = 7;     // Argon's onboard LED
 int inputPin = 2;   // Sensor input
 int pirState = LOW; // we start, assuming no motion detected
@@ -152,18 +155,42 @@ void loop()
   {
     getlightfunction();
 
-    if (lightState == HIGH && pirState == HIGH)
+    if (lightState == HIGH && pirState == HIGH && IFTTTState == LOW)
     {
+      Serial.println("Turn ON");
       // Turn lights on
+      Particle.publish("on", "on");
+      IFTTTState = HIGH;
+    }
+    else if (lightState == HIGH && pirState == HIGH && IFTTTState == HIGH)
+    {
+      //  Lights already on
+      Serial.println("Already ON");
+      IFTTTState = HIGH;
     }
     else
     {
+      Serial.println("Turn Off");
       // Turn lights off
+      Particle.publish("off", "off");
+      IFTTTState = LOW;
     }
   }
   else
   {
-    Serial.println("no pir");
-    // Turn lights off
+    if (IFTTTState == LOW)
+    {
+      Serial.println("Already Off");
+      // Light alread off
+      IFTTTState = LOW;
+    }
+    else
+    {
+      Serial.println("Turn Off");
+      Serial.println("no pir");
+      // Turn lights off
+      Particle.publish("off", "off");
+      IFTTTState = LOW;
+    }
   }
 }
