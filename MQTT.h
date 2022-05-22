@@ -1,5 +1,3 @@
-
-
 /*
 MQTT library for Particle Core, Photon, Arduino
 This software is released under the MIT License.
