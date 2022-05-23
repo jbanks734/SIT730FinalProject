@@ -161,19 +161,23 @@ void togglelights()
       // Turn lights on
       Particle.publish("on", "on");
       IFTTTState = HIGH;
+      MQTTfunctionOn();
     }
-    else if (lightState == HIGH || lightState == LOW && pirState == HIGH && IFTTTState == HIGH)
+    else if ((lightState == HIGH || lightState == LOW) && pirState == HIGH && IFTTTState == HIGH)
     {
       //  Lights already on
       Serial.println("do nothing");
       IFTTTState = HIGH;
+      MQTTfunctionOn();
     }
-    else
+    else if (lightState == HIGH && pirState == HIGH && IFTTTState == LOW)
     {
       Serial.println("Turn Off");
       // Turn lights off
       Particle.publish("off", "off");
       IFTTTState = LOW;
+      // Turn lights off
+      MQTTfunctionMovementOnly();
     }
   }
   else
@@ -183,6 +187,7 @@ void togglelights()
       Serial.println("Already Off");
       // Light alread off
       IFTTTState = LOW;
+      MQTTfunctionOff();
     }
     else
     {
@@ -191,30 +196,55 @@ void togglelights()
       // Turn lights off
       Particle.publish("off", "off");
       IFTTTState = LOW;
+      MQTTfunctionOff();
     }
   }
 }
 
-void MQTTfunction()
+void MQTTfunctionOff()
 {
+  delay(3s);
+  client.connect("photonDev");
   // Only try to send messages if we are connected
   if (client.isConnected())
   {
+    delay(1000);
+    client.publish("photonLog", "Movement&LightOff");
 
-    client.publish("photonLog", "Button has been pressed");
+    Serial.println("Movement & Light Off");
+    delay(1000);
 
-    // If the button is pressed it will be read as 0V since the button is
-    // in an inverting configuation.
+    // client.loop();
+  }
+}
 
-    // if (digitalRead(0) == 0)
-    // {
-    //   // Publish our message to the test server
-    //   client.publish("photonLog", "Button has been pressed");
-    //   delay(1000);
-    // }
+void MQTTfunctionOn()
+{
+  delay(3s);
+  client.connect("photonDev");
+  // Only try to send messages if we are connected
+  if (client.isConnected())
+  {
+    delay(1000);
+    client.publish("photonLog", "Movement&Light");
 
-    // CALL THIS at the end of your loop
-    client.loop();
+    Serial.println("Movement & Light Send");
+    delay(1000);
+  }
+}
+
+void MQTTfunctionMovementOnly()
+{
+  delay(3s);
+  client.connect("photonDev");
+  // Only try to send messages if we are connected
+  if (client.isConnected())
+  {
+    delay(1000);
+    client.publish("photonLog", "Movement");
+
+    Serial.println("Movement Only");
+    delay(1000);
   }
 }
 
@@ -227,13 +257,13 @@ void setup()
   pinMode(photoresistor, INPUT);
 
   Serial.begin(9600);
-
-  // Connect to the server and call ourselves "photonDev"
   client.connect("photonDev");
+  // Connect to the server and call ourselves "photonDev"
 }
 
 void loop()
 {
-  // togglelights();
-  MQTTfunction();
+  // MQTTfunctionOn();
+  togglelights();
+  client.loop();
 }
