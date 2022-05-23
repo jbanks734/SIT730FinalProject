@@ -203,12 +203,12 @@ void togglelights()
 
 void MQTTfunctionOff()
 {
+  client.disconnect();
   delay(3s);
   client.connect("photonDev");
   // Only try to send messages if we are connected
   if (client.isConnected())
   {
-    delay(1000);
     client.publish("photonLog", "Movement&LightOff");
 
     Serial.println("Movement & Light Off");
@@ -220,12 +220,12 @@ void MQTTfunctionOff()
 
 void MQTTfunctionOn()
 {
+  client.disconnect();
   delay(3s);
   client.connect("photonDev");
   // Only try to send messages if we are connected
   if (client.isConnected())
   {
-    delay(1000);
     client.publish("photonLog", "Movement&Light");
 
     Serial.println("Movement & Light Send");
@@ -235,12 +235,12 @@ void MQTTfunctionOn()
 
 void MQTTfunctionMovementOnly()
 {
+  client.disconnect();
   delay(3s);
   client.connect("photonDev");
   // Only try to send messages if we are connected
   if (client.isConnected())
   {
-    delay(1000);
     client.publish("photonLog", "Movement");
 
     Serial.println("Movement Only");
