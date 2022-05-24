@@ -1,24 +1,21 @@
 
 #include <MQTT.h>
 
+// Set up MQTT
 MQTT client("test.mosquitto.org", 1883, callback);
-
-// This is called when a message is received. However, we do not use this feature in
-// this project so it will be left empty
 void callback(char *topic, byte *payload, unsigned int length)
 {
 }
 
-// overall
+// overall variables
 int IFTTTState = LOW;
 
 int ledPin = 7;     // Argon's onboard LED
 int inputPin = 2;   // Sensor input
-int pirState = LOW; // we start, assuming no motion detected
-int val = 0;        // variable for reading the pin status
-int pircount = 15;
-int piron = LOW;
-int piroff = LOW;
+int pirState = LOW; // SensorState
+int val = 0;        // variable for pin on pir
+int pircount = 15;  // Used to count down so that the pir sensor can check if any movement is made
+int piron = LOW;    // Used to see if the
 
 // light
 int photoresistor = A0;
@@ -110,7 +107,6 @@ void pirfunction()
       Serial.println(piron);
       Serial.println(pirState);
       pircount--;
-      piroff = HIGH;
     }
     delay(2s);
   }
@@ -143,7 +139,6 @@ void getpirfunction()
 
   pircount = 15;
   piron = LOW;
-  piroff = LOW;
   delay(4s);
 }
 
