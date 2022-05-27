@@ -1,21 +1,29 @@
-// overall
+
+#include <MQTT.h>
+
+// Set up MQTT
+MQTT client("test.mosquitto.org", 1883, callback);
+void callback(char *topic, byte *payload, unsigned int length)
+{
+}
+
+// overall variables
 int IFTTTState = LOW;
 
 int ledPin = 7;     // Argon's onboard LED
 int inputPin = 2;   // Sensor input
-int pirState = LOW; // we start, assuming no motion detected
-int val = 0;        // variable for reading the pin status
-int pircount = 15;
-int piron = LOW;
-int piroff = LOW;
+int pirState = LOW; // SensorState
+int val = 0;        // variable for pin on pir
+int pircount = 15;  // Used to count down so that the pir sensor can check if any movement is made
+int piron = LOW;    // Used to see if there is movement
 
 // light
-int photoresistor = A0;
-int analogValue;
-int lightcount = 4;
-int lightState = LOW;
+int photoresistor = A0; // The analog input for the light sensor
+int analogValue;        // Stores the value of the light sensor
+int lightcount = 4;     // Used to make sure the is light or not
+int lightState = LOW;   // The state of the light
 
-// light
+// Function to sense if there is light
 void lightfunction()
 {
   while (lightcount != 0 && lightcount != 7)
@@ -23,13 +31,13 @@ void lightfunction()
     analogValue = analogRead(photoresistor);
     if (analogValue > 6)
     {
-      Serial.println("IsLight");
+      Serial.println("Is Light");
       Serial.println(lightcount);
       lightcount++;
     }
     else
     {
-      Serial.println("NoLight");
+      Serial.println("No Light");
       Serial.println(lightcount);
       lightcount--;
     }
@@ -37,36 +45,23 @@ void lightfunction()
   }
 }
 
+// Function to set the states of the lights
 void getlightfunction()
 {
   lightfunction();
-
-  Serial.println("BreakOut");
 
   if (lightcount == 7)
   {
     if (lightState == LOW)
     {
-      Serial.println("Notify light on");
-      // Particle.publish("on", "on");
       lightState = HIGH;
-    }
-    else
-    {
-      Serial.println("Already Notified light on");
     }
   }
   else
   {
     if (lightState == HIGH)
     {
-      Serial.println("Notify light off");
-      // Particle.publish("off", "off");
       lightState = LOW;
-    }
-    else
-    {
-      Serial.println("Already Notified light off");
     }
   }
 
@@ -75,8 +70,7 @@ void getlightfunction()
   delay(2s);
 }
 
-// pir
-
+// Function to see if there is movement using the PIR sensor
 void pirfunction()
 {
   while (pircount != 0 && pircount < 20)
@@ -84,27 +78,23 @@ void pirfunction()
     val = digitalRead(inputPin);
     if (val == 1)
     {
-      Serial.println("IsMovement");
+      Serial.println("Is Movement");
       Serial.println(pircount);
-      Serial.println(piron);
-      Serial.println(pirState);
 
       pircount = 25;
       piron = HIGH;
     }
     else
     {
-      Serial.println("NoMovement");
+      Serial.println("No Movement");
       Serial.println(pircount);
-      Serial.println(piron);
-      Serial.println(pirState);
       pircount--;
-      piroff = HIGH;
     }
     delay(2s);
   }
 }
 
+// Function to set the state of the PIR sensor
 void getpirfunction()
 {
   pirfunction();
@@ -115,7 +105,7 @@ void getpirfunction()
 
     if (pirState == LOW)
     {
-      Serial.println("Motion detected!"); // Only show message on change
+      Serial.println("Motion detected!");
       pirState = HIGH;
     }
   }
@@ -125,17 +115,17 @@ void getpirfunction()
 
     if (pirState == HIGH)
     {
-      Serial.println("Motion ended!"); // Only show message on change
+      Serial.println("Motion ended!");
       pirState = LOW;
     }
   }
 
   pircount = 15;
   piron = LOW;
-  piroff = LOW;
   delay(4s);
 }
 
+// Function to toggle the lights
 void togglelights()
 {
   getpirfunction();
@@ -147,22 +137,22 @@ void togglelights()
     if (lightState == LOW && pirState == HIGH && IFTTTState == LOW)
     {
       Serial.println("Turn ON");
-      // Turn lights on
       Particle.publish("on", "on");
       IFTTTState = HIGH;
+      MQTTfunctionOn();
     }
-    else if (lightState == HIGH || lightState == LOW && pirState == HIGH && IFTTTState == HIGH)
+    else if ((lightState == HIGH || lightState == LOW) && pirState == HIGH && IFTTTState == HIGH)
     {
-      //  Lights already on
       Serial.println("do nothing");
       IFTTTState = HIGH;
+      MQTTfunctionOn();
     }
-    else
+    else if (lightState == HIGH && pirState == HIGH && IFTTTState == LOW)
     {
       Serial.println("Turn Off");
-      // Turn lights off
       Particle.publish("off", "off");
       IFTTTState = LOW;
+      MQTTfunctionMovementOnly();
     }
   }
   else
@@ -170,17 +160,55 @@ void togglelights()
     if (IFTTTState == LOW)
     {
       Serial.println("Already Off");
-      // Light alread off
       IFTTTState = LOW;
+      MQTTfunctionOff();
     }
     else
     {
       Serial.println("Turn Off");
-      Serial.println("no pir");
-      // Turn lights off
       Particle.publish("off", "off");
       IFTTTState = LOW;
+      MQTTfunctionOff();
     }
+  }
+}
+
+// Function to tell the raspberry pi the lights are off as well as movement using MQTT
+void MQTTfunctionOff()
+{
+  client.disconnect();
+  client.connect("photonDev");
+  if (client.isConnected())
+  {
+    client.publish("photonLog", "Movement&LightOff");
+
+    Serial.println("Movement & Light Off");
+  }
+}
+
+// Function to tell the raspberry pi the lights are on and there is movement using MQTT
+void MQTTfunctionOn()
+{
+  client.disconnect();
+  client.connect("photonDev");
+  if (client.isConnected())
+  {
+    client.publish("photonLog", "Movement&Light");
+
+    Serial.println("Movement & Light Send");
+  }
+}
+
+// Function to tell the raspberry pi the lights are off using MQTT
+void MQTTfunctionMovementOnly()
+{
+  client.disconnect();
+  client.connect("photonDev");
+  if (client.isConnected())
+  {
+    client.publish("photonLog", "Movement");
+
+    Serial.println("Movement Only");
   }
 }
 
@@ -188,14 +216,14 @@ void setup()
 {
   pinMode(ledPin, OUTPUT);  // declare LED as output
   pinMode(inputPin, INPUT); // declare sensor as input
-
-  // light
   pinMode(photoresistor, INPUT);
 
-  Serial.begin(9600);
+  Serial.begin(9600);          // Start serial
+  client.connect("photonDev"); // Connect to the server
 }
 
 void loop()
 {
   togglelights();
+  client.loop();
 }
